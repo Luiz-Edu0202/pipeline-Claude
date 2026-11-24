@@ -90,13 +90,64 @@ check_dependencies() {
   fi
 }
 
+install_hooks() {
+  local hooks_dir="$HOME/.claude/hooks/pipeline"
+  mkdir -p "$hooks_dir"
+  cp "$SCRIPT_DIR"/hooks/*.sh "$hooks_dir/"
+  chmod +x "$hooks_dir/"*.sh
+  echo "Hooks instalados em: $hooks_dir"
+}
+
+cleanup_legacy_in_dir() {
+  local base_dir="$1"
+  local legacy_files=(
+    "$base_dir/agents/coder.md"
+    "$base_dir/agents/tester.md"
+    "$base_dir/agents/simplifier.md"
+    "$base_dir/agents/reviewer.md"
+    "$base_dir/commands/pipeline-v2.md"
+  )
+
+  for file in "${legacy_files[@]}"; do
+    if [ -f "$file" ]; then
+      rm -f "$file"
+      echo "Removido arquivo legado (v1): $file"
+    fi
+  done
+}
+
+install_pipeline_files() {
+  local target_dir="$1"
+  mkdir -p "$target_dir/commands" "$target_dir/agents"
+  cp "$SCRIPT_DIR/pipeline.md" "$target_dir/commands/"
+  cp "$SCRIPT_DIR"/agents/*.md "$target_dir/agents/"
+  echo "Comando instalado em: $target_dir/commands/pipeline.md"
+  echo "Agentes instalados em: $target_dir/agents/"
+}
+
 main() {
   parse_args "$@"
   check_dependencies
+
+  local target_dir
   if [ "$MODE" = "global" ]; then
-    echo "Modo selecionado: global ($HOME/.claude)"
+    target_dir="$HOME/.claude"
   else
-    echo "Modo selecionado: projeto ($PROJECT_DIR/.claude)"
+    target_dir="$PROJECT_DIR/.claude"
+  fi
+
+  install_hooks
+  install_pipeline_files "$target_dir"
+
+  cleanup_legacy_in_dir "$target_dir"
+  if [ "$target_dir" != "$HOME/.claude" ]; then
+    cleanup_legacy_in_dir "$HOME/.claude"
+  fi
+
+  echo ""
+  echo "Instalação concluída. Reinicie o Claude Code para carregar o comando /pipeline e os agentes."
+  if [ "$MODE" = "project" ]; then
+    echo "Nota: aceite o diálogo de confiança do workspace no Claude Code se usar hooks locais."
   fi
 }
 
