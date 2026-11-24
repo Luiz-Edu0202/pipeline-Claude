@@ -68,8 +68,31 @@ parse_args() {
   fi
 }
 
+check_dependencies() {
+  local missing=0
+
+  if ! command -v git >/dev/null 2>&1; then
+    echo "Erro: 'git' não encontrado. Necessário para controle de branch, diff e commits do pipeline." >&2
+    missing=1
+  fi
+
+  if ! command -v python3 >/dev/null 2>&1; then
+    echo "Erro: 'python3' não encontrado. Necessário para os hooks em ~/.claude/hooks/pipeline/." >&2
+    missing=1
+  fi
+
+  if [ "$missing" -ne 0 ]; then
+    exit 1
+  fi
+
+  if ! command -v gh >/dev/null 2>&1; then
+    echo "Aviso: 'gh' (GitHub CLI) não encontrado. A abertura automática de PRs ficará indisponível." >&2
+  fi
+}
+
 main() {
   parse_args "$@"
+  check_dependencies
   if [ "$MODE" = "global" ]; then
     echo "Modo selecionado: global ($HOME/.claude)"
   else
