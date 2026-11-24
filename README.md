@@ -114,23 +114,16 @@ Cada etapa grava tokens e tempo em `.pipeline/usage.csv`, que é arquivado com o
 git clone https://github.com/Carloscavalcante97/pipeline-Claude.git
 cd pipeline-Claude
 
-# hooks dos agentes: ficam sempre neste caminho, que o frontmatter referencia
-mkdir -p ~/.claude/hooks/pipeline && cp hooks/*.sh ~/.claude/hooks/pipeline/
-
-# global, vale para todos os projetos da máquina
-cp pipeline.md ~/.claude/commands/
-cp agents/*.md ~/.claude/agents/
+# global, vale para todos os projetos da máquina (padrão)
+./install.sh --global
 
 # ou só num projeto, versionado junto com o código dele
-mkdir -p ../meu-projeto/.claude/commands ../meu-projeto/.claude/agents
-cp pipeline.md ../meu-projeto/.claude/commands/
-cp agents/*.md ../meu-projeto/.claude/agents/
-
-# se você tinha a versão de oito agentes, remova o que saiu
-rm -f ~/.claude/agents/{coder,tester,simplifier,reviewer}.md ~/.claude/commands/pipeline-v2.md
+./install.sh --project ../meu-projeto
 ```
 
-O Claude Code carrega comandos e agentes na inicialização: depois de copiar, reinicie. Hooks de agentes instalados dentro de um projeto só rodam depois que você aceita o diálogo de confiança do workspace; os globais rodam direto.
+O `install.sh` verifica as dependências (`git` e `python3` obrigatórios; `gh` opcional para abertura de PRs), instala os hooks em `~/.claude/hooks/pipeline/` (caminho fixo referenciado pelo frontmatter dos agentes), copia o comando e os agentes para o destino escolhido e remove arquivos legados da versão de oito agentes (`coder.md`, `tester.md`, `simplifier.md`, `reviewer.md` e `pipeline-v2.md`).
+
+O Claude Code carrega comandos e agentes na inicialização: depois de instalar ou atualizar, reinicie. Hooks de agentes instalados dentro de um projeto só rodam depois que você aceita o diálogo de confiança do workspace; os globais rodam direto.
 
 O plugin Ponytail no modo global pode ficar ligado. O Builder e o E2E Tester têm uma regra explícita para não reduzir os testes por critério.
 
